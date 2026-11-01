@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "DocuMate",
+    "slug": "documate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "documate",
+    "backgroundColor": "#F5F3EE",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.documate"
+    },
+    "android": {
+      "package": "com.example.documate",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#315C57"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-document-picker",
+      "expo-status-bar",
+      "expo-sharing",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F3EE"
+        }
+      ]
+    ]
+  }
+}
