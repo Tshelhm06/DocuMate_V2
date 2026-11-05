@@ -1,3 +1,4 @@
+import { PIN_LENGTH } from './constants';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -24,4 +25,9 @@ export function validateTitle(title) {
   if (!value) return 'Enter a document title';
   if (value.length > 80) return 'Title is too long (max 80 characters)';
   return null;
+}
+
+
+export function isValidPin(pin) {
+  return new RegExp(`^\\d{${PIN_LENGTH}}$`).test(String(pin || ''));
 }

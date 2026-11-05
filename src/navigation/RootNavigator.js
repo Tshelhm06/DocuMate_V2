@@ -4,16 +4,19 @@ import { NavigationContainer, createNavigationContainerRef } from '@react-naviga
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme';
 import { useAuth } from '../context/AuthContext';
+import { useLock } from '../context/LockContext';
 import { getBoolSetting } from '../db/settingsRepo';
 import { Notifications } from '../services/notifications';
 
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import AuthScreen from '../screens/auth/AuthScreen';
+import LockScreen from '../screens/LockScreen';
 import MainTabs from './MainTabs';
 import DocumentDetailsScreen from '../screens/documents/DocumentDetailsScreen';
 import AddEditDocumentScreen from '../screens/documents/AddEditDocumentScreen';
 import AddReminderScreen from '../screens/reminders/AddReminderScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import SecurityScreen from '../screens/profile/SecurityScreen';
 import AboutScreen from '../screens/profile/AboutScreen';
 
 const Stack = createNativeStackNavigator();
@@ -39,6 +42,7 @@ const navTheme = {
 
 export default function RootNavigator() {
   const { ready, session } = useAuth();
+  const { loaded, locked } = useLock();
   const [seenWelcome, setSeenWelcome] = useState(null);
 
   useEffect(() => {
@@ -63,7 +67,7 @@ export default function RootNavigator() {
     return () => sub && sub.remove();
   }, []);
 
-  if (!ready || seenWelcome === null) {
+  if (!ready || !loaded || seenWelcome === null) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} />
@@ -84,6 +88,9 @@ export default function RootNavigator() {
             ) : null}
             <Stack.Screen name="Auth" component={AuthScreen} />
           </>
+        ) : locked ? (
+          // Signed in but the app lock is asking for PIN / biometrics
+          <Stack.Screen name="Lock" component={LockScreen} options={{ animation: 'fade', gestureEnabled: false }} />
         ) : (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
@@ -91,6 +98,7 @@ export default function RootNavigator() {
             <Stack.Screen name="AddEditDocument" component={AddEditDocumentScreen} />
             <Stack.Screen name="AddReminder" component={AddReminderScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="Security" component={SecurityScreen} />
             <Stack.Screen name="About" component={AboutScreen} />
           </>
         )}

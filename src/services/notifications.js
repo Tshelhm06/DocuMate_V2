@@ -38,31 +38,43 @@ const DATE_TRIGGER = Notifications?.SchedulableTriggerInputTypes?.DATE ?? 'date'
 
 export async function ensureChannel() {
   if (!Notifications || Platform.OS !== 'android') return;
-  await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
-    name: 'Document expiry reminders',
-    importance: Notifications.AndroidImportance.HIGH,
-    vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#315C57',
-  });
+  try {
+    await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
+      name: 'Document expiry reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#315C57',
+    });
+  } catch (e) {
+    // Some Expo Go builds cannot create channels. Reminders are still saved.
+  }
 }
 
 export async function getPermissionStatus() {
   if (!Notifications) return 'denied';
-  const current = await Notifications.getPermissionsAsync();
-  return current.granted ? 'granted' : current.canAskAgain ? 'undetermined' : 'denied';
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    return current.granted ? 'granted' : current.canAskAgain ? 'undetermined' : 'denied';
+  } catch (e) {
+    return 'denied';
+  }
 }
 
 /** Asks for permission the first time it is needed. Returns true if allowed. */
 export async function requestPermission() {
   if (!Notifications) return false;
-  await ensureChannel();
-  const current = await Notifications.getPermissionsAsync();
-  if (current.granted) return true;
-  if (!current.canAskAgain) return false;
-  const asked = await Notifications.requestPermissionsAsync({
-    ios: { allowAlert: true, allowBadge: false, allowSound: true },
-  });
-  return Boolean(asked.granted);
+  try {
+    await ensureChannel();
+    const current = await Notifications.getPermissionsAsync();
+    if (current.granted) return true;
+    if (!current.canAskAgain) return false;
+    const asked = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: false, allowSound: true },
+    });
+    return Boolean(asked.granted);
+  } catch (e) {
+    return false;
+  }
 }
 
 function contentFor(reminder, lead) {

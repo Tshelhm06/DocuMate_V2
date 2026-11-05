@@ -7,6 +7,7 @@ import SettingRow from '../../components/SettingRow';
 import useLoad from '../../components/useLoad';
 import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLock } from '../../context/LockContext';
 import { documentCounts } from '../../db/documentsRepo';
 import { countUpcomingReminders } from '../../db/remindersRepo';
 import { APP_VERSION } from '../../utils/constants';
@@ -14,6 +15,7 @@ import { pluralize } from '../../utils/format';
 
 export default function ProfileScreen({ navigation }) {
   const { session, signOut } = useAuth();
+  const { enabled: lockEnabled } = useLock();
   const [docCount, setDocCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
 
@@ -79,6 +81,11 @@ export default function ProfileScreen({ navigation }) {
 
         <Text style={styles.section}>Account</Text>
         <SettingRow title="Edit profile" subtitle="Update your details" onPress={() => navigation.navigate('EditProfile')} />
+        <SettingRow
+          title="Security"
+          subtitle={lockEnabled ? 'App lock is on' : 'App lock, PIN and password'}
+          onPress={() => navigation.navigate('Security')}
+        />
         <SettingRow title="About DocuMate" subtitle={`Version ${APP_VERSION}`} onPress={() => navigation.navigate('About')} last />
 
         <Button title="Log out" variant="danger" onPress={confirmLogout} style={{ marginTop: 24 }} />

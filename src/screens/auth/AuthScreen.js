@@ -14,6 +14,7 @@ import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLock } from '../../context/LockContext';
 import { friendlyAuthError } from '../../services/auth';
 import { isFirebaseConfigured } from '../../config/firebase';
 import { countOfflineDocuments, adoptOfflineData } from '../../services/offlineData';
@@ -21,6 +22,7 @@ import { validateEmail, validateName, validatePassword } from '../../utils/valid
 
 export default function AuthScreen() {
   const { signIn, signUp, continueOffline, resetPassword } = useAuth();
+  const { markUnlocked } = useLock();
 
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
   const [name, setName] = useState('');
@@ -71,6 +73,7 @@ export default function AuthScreen() {
     setBusy(true);
     try {
       const user = mode === 'signup' ? await signUp({ name, email, password }) : await signIn({ email, password });
+      markUnlocked();
       offerOfflineTransfer(user.uid);
     } catch (e) {
       Alert.alert(mode === 'signup' ? 'Could not create account' : 'Could not log in', friendlyAuthError(e));
@@ -99,6 +102,7 @@ export default function AuthScreen() {
 
   const goOffline = async () => {
     await continueOffline();
+    markUnlocked();
   };
 
   const isLogin = mode === 'login';

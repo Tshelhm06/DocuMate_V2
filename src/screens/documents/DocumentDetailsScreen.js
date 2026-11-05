@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import useLoad from '../../components/useLoad';
 import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLock } from '../../context/LockContext';
 import { getDocument } from '../../db/documentsRepo';
 import { getReminderByDocument } from '../../db/remindersRepo';
 import { removeDocument } from '../../services/documents';
@@ -19,6 +20,7 @@ import { leadLabel, parseLeadDays } from '../../utils/reminderSchedule';
 export default function DocumentDetailsScreen({ navigation, route }) {
   const { id } = route.params;
   const { session } = useAuth();
+  const { runWithoutLock } = useLock();
 
   const [doc, setDoc] = useState(null);
   const [reminder, setReminder] = useState(null);
@@ -50,11 +52,13 @@ export default function DocumentDetailsScreen({ navigation, route }) {
         Alert.alert('Not available', 'Sharing is not available on this device.');
         return;
       }
-      await Sharing.shareAsync(uriFor(doc.storedName), {
-        mimeType: doc.mimeType || undefined,
-        UTI: doc.fileType === 'pdf' ? 'com.adobe.pdf' : 'public.image',
-        dialogTitle: doc.title,
-      });
+      await runWithoutLock(() =>
+        Sharing.shareAsync(uriFor(doc.storedName), {
+          mimeType: doc.mimeType || undefined,
+          UTI: doc.fileType === 'pdf' ? 'com.adobe.pdf' : 'public.image',
+          dialogTitle: doc.title,
+        })
+      );
     } catch (e) {
       Alert.alert('Could not open file', 'Something went wrong while opening this file.');
     }

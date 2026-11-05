@@ -20,6 +20,7 @@ import ReminderPicker from '../../components/ReminderPicker';
 import { explainReminderResult } from '../../components/reminderFeedback';
 import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLock } from '../../context/LockContext';
 import { getDocument } from '../../db/documentsRepo';
 import { getReminderByDocument } from '../../db/remindersRepo';
 import { addDocument, editDocument } from '../../services/documents';
@@ -35,6 +36,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
   const isEdit = editingId !== null;
 
   const { session } = useAuth();
+  const { runWithoutLock } = useLock();
 
   const [original, setOriginal] = useState(null);
   const [title, setTitle] = useState('');
@@ -73,11 +75,13 @@ export default function AddEditDocumentScreen({ navigation, route }) {
 
   const pickFile = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: false,
-        multiple: false,
-      });
+            const result = await runWithoutLock(() =>
+        DocumentPicker.getDocumentAsync({
+          type: ['application/pdf', 'image/*'],
+          copyToCacheDirectory: false,
+          multiple: false,
+        })
+      );
       if (result.canceled || !result.assets?.length) return;
 
       const asset = result.assets[0];
