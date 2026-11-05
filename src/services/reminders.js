@@ -7,6 +7,7 @@ import {
   listReminders,
 } from '../db/remindersRepo';
 import { scheduleForReminder, cancelNotifications } from './notifications';
+import { addPendingDelete } from '../db/documentsRepo';
 import { newId } from '../utils/id';
 import { serializeLeadDays } from '../utils/reminderSchedule';
 
@@ -54,4 +55,24 @@ export async function updateReminder(id, ownerId, { title, category, dueAt, lead
 export async function removeReminder(reminder) {
   await cancelNotifications(reminder.notificationIds);
   await deleteReminderRow(reminder.id, reminder.ownerId);
+  if (reminder.backedUpAt) {
+    await addPendingDelete({ ownerId: reminder.ownerId, kind: 'reminder', cloudId: reminder.cloudId });
+  }
+}
+
+/** Used by Restore: inserts a reminder that already has a cloud id. */
+export async function restoreReminder({ cloudId, ownerId, documentId, title, category, dueAt, leadDays }) {
+  const id = await insertReminder({
+    cloudId,
+    ownerId,
+    documentId,
+    title,
+    category,
+    dueAt,
+    leadDays,
+    notificationIds: [],
+    backedUpAt: Date.now(),
+  });
+  await scheduleAndSave({ id, title, dueAt, leadDays });
+  return id;
 }

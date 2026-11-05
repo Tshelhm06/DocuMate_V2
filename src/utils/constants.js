@@ -24,4 +24,8 @@ export const OFFLINE_UID = 'offline';
 // Largest file the app will accept.
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
+// Cloud backup (Firestore only): files are cut into ~600 KB text chunks.
+export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
+export const CHUNK_CHARS = 600000;
+
 export const PIN_LENGTH = 4;

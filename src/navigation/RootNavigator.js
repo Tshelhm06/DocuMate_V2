@@ -17,6 +17,7 @@ import AddEditDocumentScreen from '../screens/documents/AddEditDocumentScreen';
 import AddReminderScreen from '../screens/reminders/AddReminderScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import SecurityScreen from '../screens/profile/SecurityScreen';
+import StorageBackupScreen from '../screens/profile/StorageBackupScreen';
 import AboutScreen from '../screens/profile/AboutScreen';
 
 const Stack = createNativeStackNavigator();
@@ -99,6 +100,7 @@ export default function RootNavigator() {
             <Stack.Screen name="AddReminder" component={AddReminderScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Security" component={SecurityScreen} />
+            <Stack.Screen name="StorageBackup" component={StorageBackupScreen} />
             <Stack.Screen name="About" component={AboutScreen} />
           </>
         )}

@@ -10,7 +10,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useLock } from '../../context/LockContext';
 import { documentCounts } from '../../db/documentsRepo';
 import { countUpcomingReminders } from '../../db/remindersRepo';
+import { getLastBackupAt } from '../../services/backup';
 import { APP_VERSION } from '../../utils/constants';
+import { formatDate } from '../../utils/dates';
 import { pluralize } from '../../utils/format';
 
 export default function ProfileScreen({ navigation }) {
@@ -18,15 +20,24 @@ export default function ProfileScreen({ navigation }) {
   const { enabled: lockEnabled } = useLock();
   const [docCount, setDocCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
+  const [lastBackup, setLastBackup] = useState(null);
 
   useLoad(async () => {
-    const [counts, upcoming] = await Promise.all([
+    const [counts, upcoming, last] = await Promise.all([
       documentCounts(session.uid),
       countUpcomingReminders(session.uid),
+      getLastBackupAt(session.uid),
     ]);
     setDocCount(counts.total);
     setReminderCount(upcoming);
+    setLastBackup(last);
   }, [session.uid]);
+  
+  const backupSubtitle = session.offline
+    ? 'Log in to back up'
+    : lastBackup
+    ? `Last backup ${formatDate(lastBackup)}`
+    : 'Not backed up yet';
 
   const confirmLogout = () => {
     Alert.alert(
@@ -68,15 +79,8 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        <SettingRow card title="Storage" subtitle={pluralize(docCount, 'document')} onPress={() => navigation.navigate('Documents')} />
-        <SettingRow
-          card
-          title="Offline mode"
-          subtitle="Enabled"
-          onPress={() =>
-            Alert.alert('Offline mode', 'Your documents are always saved on this phone, so you can view, add, edit and search them without internet.')
-          }
-        />
+        <SettingRow card title="Storage" subtitle={pluralize(docCount, 'document')} onPress={() => navigation.navigate('StorageBackup')} />
+        <SettingRow card title="Cloud backup" subtitle={backupSubtitle} onPress={() => navigation.navigate('StorageBackup')} />
         <SettingRow card title="Reminders" subtitle={`${reminderCount} active`} onPress={() => navigation.navigate('Reminders')} />
 
         <Text style={styles.section}>Account</Text>

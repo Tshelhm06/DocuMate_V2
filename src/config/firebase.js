@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Values come from the ".env" file (see .env.example). Expo inlines
@@ -20,6 +21,7 @@ export const isFirebaseConfigured = Boolean(
 
 let app = null;
 let auth = null;
+let firestore = null;
 
 if (isFirebaseConfigured) {
   app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -32,6 +34,12 @@ if (isFirebaseConfigured) {
     auth = getAuth(app);
   }
 
+  try {
+    // Long polling makes Firestore more reliable on some phone networks.
+    firestore = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+  } catch (e) {
+    firestore = getFirestore(app);
+  }
 }
 
-export { app, auth };
+export { app, auth, firestore };
