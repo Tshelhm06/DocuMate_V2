@@ -42,7 +42,7 @@ export default function ProfileScreen({ navigation }) {
   const confirmLogout = () => {
     Alert.alert(
       'Log out?',
-      session.offline
+      session.guest
         ? 'You will return to the login screen. Documents saved in offline mode stay on this phone.'
         : 'Your documents stay on this phone. You can log in again any time.',
       [
@@ -67,10 +67,11 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.name} numberOfLines={1}>
               {session.name}
             </Text>
-            {session.offline ? (
+            {session.guest ? (
               <Text style={styles.line}>Offline mode · no account</Text>
             ) : (
               <>
+                {session.offline ? <Text style={styles.line}>Offline mode</Text> : null}
                 {session.degree ? <Text style={styles.line}>{session.degree}</Text> : null}
                 {session.studentId ? <Text style={styles.line}>{`Student ID · ${session.studentId}`}</Text> : null}
                 {!session.degree && !session.studentId ? <Text style={styles.line}>{session.email}</Text> : null}

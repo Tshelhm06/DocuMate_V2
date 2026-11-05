@@ -118,7 +118,9 @@ export default function StorageBackupScreen({ navigation }) {
           <Text style={styles.cardLabel}>Cloud backup</Text>
           {session.offline ? (
             <Text style={styles.body}>
-              You are using DocuMate offline without an account. Log out, then sign up or log in to back up your documents to the cloud.
+              {session.guest
+                ? 'You are using DocuMate offline without an account. Log out, then sign up or log in to back up your documents to the cloud.'
+                : 'You are using your account offline. Log out and log in again (with internet) to back up or restore your documents.'}
             </Text>
           ) : !isFirebaseConfigured ? (
             <Text style={styles.body}>Firebase is not set up yet. Fill in the .env file (see README), then restart the app.</Text>

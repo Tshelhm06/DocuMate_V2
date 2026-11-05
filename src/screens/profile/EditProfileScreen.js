@@ -39,7 +39,7 @@ export default function EditProfileScreen({ navigation }) {
           <TextField label="Full name" value={name} onChangeText={setName} autoCapitalize="words" placeholder="Your full name" error={error} />
           <TextField label="Degree / programme" value={degree} onChangeText={setDegree} autoCapitalize="words" placeholder="e.g. BE Information Technology" />
           <TextField label="Student ID" value={studentId} onChangeText={setStudentId} placeholder="e.g. 02240188" keyboardType="number-pad" />
-          {!session.offline ? <Text style={styles.email}>{`Signed in as ${session.email}`}</Text> : null}
+          {!session.guest ? <Text style={styles.email}>{`${session.offline ? 'Using offline as' : 'Signed in as'} ${session.email}`}</Text> : null}
           <Button title="Save changes" onPress={save} loading={saving} style={{ marginTop: 16 }} />
         </ScrollView>
       </KeyboardAvoidingView>

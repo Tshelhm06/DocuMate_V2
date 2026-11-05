@@ -112,7 +112,7 @@ export default function LockScreen() {
   };
 
   const forgotPin = () => {
-    const offline = session?.offline;
+    const offline = Boolean(session?.guest); // only the guest space is wiped; accounts keep their documents
     Alert.alert(
       'Forgot your PIN?',
       offline

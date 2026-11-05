@@ -21,7 +21,7 @@ import { countOfflineDocuments, adoptOfflineData } from '../../services/offlineD
 import { validateEmail, validateName, validatePassword } from '../../utils/validation';
 
 export default function AuthScreen() {
-  const { signIn, signUp, continueOffline, resetPassword } = useAuth();
+  const { signIn, signUp, continueOffline, resetPassword, lastAccount } = useAuth();
   const { markUnlocked } = useLock();
 
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
@@ -100,10 +100,16 @@ export default function AuthScreen() {
     }
   };
 
-  const goOffline = async () => {
-    await continueOffline();
-    markUnlocked();
+  const goOffline = async (asAccount) => {
+    try {
+      await continueOffline(asAccount);
+      markUnlocked();
+    } catch (_) {
+      Alert.alert('Could not continue offline', 'Please try again.');
+    }
   };
+
+  const accountLabel = lastAccount ? lastAccount.name.trim().split(' ')[0] || lastAccount.email : '';
 
   const isLogin = mode === 'login';
 
@@ -198,7 +204,22 @@ export default function AuthScreen() {
           {isLogin ? (
             <>
               <Text style={styles.or}>or</Text>
-              <Button title="Continue offline" variant="secondary" onPress={goOffline} disabled={busy} />
+              {lastAccount ? (
+                <>
+                  <Button
+                    title={`Continue offline as ${accountLabel}`}
+                    variant="secondary"
+                    onPress={() => goOffline(true)}
+                    disabled={busy}
+                  />
+                  <Text style={styles.note}>Opens your documents saved on this phone. No internet needed.</Text>
+                  <Pressable onPress={() => goOffline(false)} style={styles.switchLink} accessibilityRole="button">
+                    <Text style={styles.forgotText}>Use guest mode instead (separate, empty)</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Button title="Continue offline" variant="secondary" onPress={() => goOffline(false)} disabled={busy} />
+              )}
             </>
           ) : (
             <>

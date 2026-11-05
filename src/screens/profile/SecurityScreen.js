@@ -139,7 +139,7 @@ export default function SecurityScreen({ navigation }) {
 
         <Text style={styles.section}>Account</Text>
         <View style={styles.group}>
-          {session.offline ? (
+          {session.guest ? (
             <SettingRow title="Password" subtitle="Offline mode has no account. Log out and sign up to create one." last />
           ) : (
             <SettingRow title="Reset password" subtitle={`Email a reset link to ${session.email}`} onPress={sendReset} last />
