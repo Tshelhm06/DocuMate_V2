@@ -35,10 +35,14 @@ export default function LockScreen() {
   // Is biometrics available? Then try it as soon as the screen appears.
   useEffect(() => {
     (async () => {
-      const status = await biometricStatus();
-      setBio(status);
-      setWaitSeconds(await getLockoutRemaining());
-      if (biometric && status.available) tryBiometrics();
+      try {
+        const status = await biometricStatus();
+        setBio(status);
+        setWaitSeconds(await getLockoutRemaining());
+        if (biometric && status.available) tryBiometrics();
+      } catch (_) {
+        // The PIN pad still works if the status checks fail.
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -98,6 +102,10 @@ export default function LockScreen() {
         setPin('');
         setWrong(false);
       }, 450);
+    } catch (_) {
+      // Never leave the pad stuck with four dots if checking the PIN fails.
+      setMessage('Could not check the PIN. Please try again.');
+      setPin('');
     } finally {
       checking.current = false;
     }
