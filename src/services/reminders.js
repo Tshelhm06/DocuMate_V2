@@ -1,17 +1,31 @@
 import {
   insertReminder,
   updateReminderRow,
+  setNotificationIds,
   deleteReminderRow,
   getReminder,
+  listReminders,
 } from '../db/remindersRepo';
+import { scheduleForReminder, cancelNotifications } from './notifications';
 import { newId } from '../utils/id';
+import { serializeLeadDays } from '../utils/reminderSchedule';
 
 /**
- * Reminder business logic. A reminder is a title, a category and a due date that
- * is shown on the Reminders tab (next reminder + upcoming list).
+ * Reminder business logic: keeps the SQLite row and the phone's scheduled
+ * notifications in step with each other.
  */
 
-export async function createReminder({ ownerId, title, category, dueAt, documentId = null }) {
+async function scheduleAndSave(reminder) {
+  const result = await scheduleForReminder(reminder);
+  await setNotificationIds(reminder.id, result.ids);
+  return result;
+}
+
+/**
+ * @returns {{id:number, scheduled:number, granted:boolean}}
+ */
+export async function createReminder({ ownerId, title, category, dueAt, leadDays, documentId = null }) {
+  const leadText = serializeLeadDays(leadDays);
   const id = await insertReminder({
     cloudId: newId(),
     ownerId,
@@ -19,19 +33,25 @@ export async function createReminder({ ownerId, title, category, dueAt, document
     title,
     category,
     dueAt,
-    leadDays: '',
+    leadDays: leadText,
     notificationIds: [],
   });
-  return { id };
+  const result = await scheduleAndSave({ id, title, dueAt, leadDays: leadText });
+  return { id, ...result };
 }
 
-export async function updateReminder(id, ownerId, { title, category, dueAt }) {
+export async function updateReminder(id, ownerId, { title, category, dueAt, leadDays }) {
   const existing = await getReminder(id, ownerId);
   if (!existing) throw new Error('Reminder not found');
-  await updateReminderRow(id, ownerId, { title, category, dueAt, leadDays: '' });
-  return { id };
+
+  await cancelNotifications(existing.notificationIds);
+  const leadText = serializeLeadDays(leadDays);
+  await updateReminderRow(id, ownerId, { title, category, dueAt, leadDays: leadText });
+  const result = await scheduleAndSave({ id, title, dueAt, leadDays: leadText });
+  return { id, ...result };
 }
 
 export async function removeReminder(reminder) {
+  await cancelNotifications(reminder.notificationIds);
   await deleteReminderRow(reminder.id, reminder.ownerId);
 }

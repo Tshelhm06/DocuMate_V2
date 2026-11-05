@@ -14,6 +14,7 @@ import { removeDocument } from '../../services/documents';
 import { fileExists, uriFor } from '../../services/fileStorage';
 import { formatLongDate, formatDate, formatCountdown } from '../../utils/dates';
 import { formatBytes } from '../../utils/format';
+import { leadLabel, parseLeadDays } from '../../utils/reminderSchedule';
 
 export default function DocumentDetailsScreen({ navigation, route }) {
   const { id } = route.params;
@@ -126,7 +127,10 @@ export default function DocumentDetailsScreen({ navigation, route }) {
           {reminder ? (
             <Row
               label="Reminder"
-              value={`${formatDate(reminder.dueAt)} (${formatCountdown(reminder.dueAt)})`}
+              value={`${formatDate(reminder.dueAt)} (${formatCountdown(reminder.dueAt)})\n${parseLeadDays(reminder.leadDays)
+                .sort((a, b) => b - a)
+                .map(leadLabel)
+                .join(', ')}`}
             />
           ) : null}
         </View>

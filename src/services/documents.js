@@ -35,7 +35,7 @@ async function storePickedFile(file) {
  * @param {string} ownerId
  * @param {{title:string, category:string, description:string,
  *          file:{uri:string,name:string,size?:number,mimeType?:string},
- *          reminder?: {dueAt:number} | null}} form
+ *          reminder?: {dueAt:number, leadDays:number[]} | null}} form
  * @returns {{id:number, reminder: null | {scheduled:number, granted:boolean}}}
  */
 export async function addDocument(ownerId, form) {
@@ -63,6 +63,7 @@ export async function addDocument(ownerId, form) {
       title: reminderTitleFor(form.title),
       category: form.category,
       dueAt: form.reminder.dueAt,
+      leadDays: form.reminder.leadDays,
       documentId: id,
     });
   }
@@ -115,6 +116,7 @@ export async function editDocument(doc, form) {
       title: reminderTitleFor(form.title),
       category: form.category,
       dueAt: form.reminder.dueAt,
+      leadDays: form.reminder.leadDays,
     };
     reminder = existing
       ? await updateReminder(existing.id, ownerId, fields)

@@ -6,12 +6,14 @@ import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import Chip from '../../components/Chip';
 import ReminderPicker from '../../components/ReminderPicker';
+import { explainReminderResult } from '../../components/reminderFeedback';
 import { colors } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { getReminder } from '../../db/remindersRepo';
 import { createReminder, updateReminder } from '../../services/reminders';
-import { CATEGORIES } from '../../utils/constants';
+import { CATEGORIES, DEFAULT_LEAD_DAYS } from '../../utils/constants';
 import { startOfDay } from '../../utils/dates';
+import { parseLeadDays } from '../../utils/reminderSchedule';
 
 /** Standalone reminder (for example "CID expiry") that is not tied to a document. */
 export default function AddReminderScreen({ navigation, route }) {
@@ -22,6 +24,7 @@ export default function AddReminderScreen({ navigation, route }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Personal');
   const [dueAt, setDueAt] = useState(null);
+  const [leadDays, setLeadDays] = useState(DEFAULT_LEAD_DAYS);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -36,6 +39,7 @@ export default function AddReminderScreen({ navigation, route }) {
       setTitle(r.title);
       setCategory(r.category);
       setDueAt(r.dueAt);
+      setLeadDays(parseLeadDays(r.leadDays));
     })();
   }, [isEdit, editingId, session.uid, navigation]);
 
@@ -44,15 +48,17 @@ export default function AddReminderScreen({ navigation, route }) {
     if (!title.trim()) next.title = 'Enter a title, e.g. CID expiry';
     if (!dueAt) next.due = 'Pick the due date.';
     else if (!isEdit && dueAt < startOfDay(Date.now())) next.due = 'Pick today or a later date.';
+    if (leadDays.length === 0) next.lead = 'Pick at least one notification time.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     setSaving(true);
     try {
-      const fields = { title: title.trim(), category, dueAt };
-      if (isEdit) await updateReminder(editingId, session.uid, fields);
-      else await createReminder({ ownerId: session.uid, ...fields });
-      navigation.goBack();
+      const fields = { title: title.trim(), category, dueAt, leadDays };
+      const result = isEdit
+        ? await updateReminder(editingId, session.uid, fields)
+        : await createReminder({ ownerId: session.uid, ...fields });
+      explainReminderResult(result, () => navigation.goBack());
     } catch (e) {
       Alert.alert('Could not save', 'Something went wrong while saving this reminder. Please try again.');
     } finally {
@@ -84,9 +90,12 @@ export default function AddReminderScreen({ navigation, route }) {
           <View style={{ marginTop: 10 }}>
             <ReminderPicker
               dueAt={dueAt}
+              leadDays={leadDays}
               onChangeDue={setDueAt}
+              onChangeLead={setLeadDays}
               dueError={errors.due}
             />
+            {errors.lead ? <Text style={styles.error}>{errors.lead}</Text> : null}
           </View>
 
           <Button title={isEdit ? 'Save changes' : 'Save reminder'} onPress={save} loading={saving} style={{ marginTop: 24 }} />

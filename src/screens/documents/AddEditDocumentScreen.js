@@ -17,15 +17,17 @@ import Button from '../../components/Button';
 import TextField from '../../components/TextField';
 import Chip from '../../components/Chip';
 import ReminderPicker from '../../components/ReminderPicker';
+import { explainReminderResult } from '../../components/reminderFeedback';
 import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { getDocument } from '../../db/documentsRepo';
 import { getReminderByDocument } from '../../db/remindersRepo';
 import { addDocument, editDocument } from '../../services/documents';
-import { CATEGORIES, MAX_FILE_BYTES } from '../../utils/constants';
+import { CATEGORIES, DEFAULT_LEAD_DAYS, MAX_FILE_BYTES } from '../../utils/constants';
 import { startOfDay } from '../../utils/dates';
 import { detectFileType, fileTypeLabel } from '../../utils/files';
 import { formatBytes } from '../../utils/format';
+import { parseLeadDays } from '../../utils/reminderSchedule';
 import { validateTitle } from '../../utils/validation';
 
 export default function AddEditDocumentScreen({ navigation, route }) {
@@ -41,6 +43,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
   const [pickedFile, setPickedFile] = useState(null); // newly chosen file
   const [remind, setRemind] = useState(false);
   const [dueAt, setDueAt] = useState(null);
+  const [leadDays, setLeadDays] = useState(DEFAULT_LEAD_DAYS);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -62,6 +65,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
       if (r) {
         setRemind(true);
         setDueAt(r.dueAt);
+        setLeadDays(parseLeadDays(r.leadDays));
       }
       setLoading(false);
     })();
@@ -100,6 +104,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
     if (remind) {
       if (!dueAt) next.due = 'Pick the due date.';
       else if (dueAt < startOfDay(Date.now())) next.due = 'Pick today or a later date.';
+      if (leadDays.length === 0) next.lead = 'Pick at least one notification time.';
     }
     const filtered = Object.fromEntries(Object.entries(next).filter(([, v]) => v));
     setErrors(filtered);
@@ -110,11 +115,14 @@ export default function AddEditDocumentScreen({ navigation, route }) {
     if (!validate()) return;
     setSaving(true);
     try {
-      const reminder = remind ? { dueAt } : null;
+      const reminder = remind ? { dueAt, leadDays } : null;
       const form = { title, category, description, reminder };
-      if (isEdit) await editDocument(original, { ...form, file: pickedFile });
-      else await addDocument(session.uid, { ...form, file: pickedFile });
-      navigation.goBack();
+      
+      const result = isEdit
+        ? await editDocument(original, { ...form, file: pickedFile })
+        : await addDocument(session.uid, { ...form, file: pickedFile });
+
+      explainReminderResult(result.reminder, () => navigation.goBack());
     } catch (e) {
       Alert.alert('Could not save', String(e?.message || e));
     } finally {
@@ -208,9 +216,12 @@ export default function AddEditDocumentScreen({ navigation, route }) {
               <View style={{ marginTop: 18 }}>
                 <ReminderPicker
                   dueAt={dueAt}
+                  leadDays={leadDays}
                   onChangeDue={setDueAt}
+                  onChangeLead={setLeadDays}
                   dueError={errors.due}
                 />
+                {errors.lead ? <Text style={styles.error}>{errors.lead}</Text> : null}
               </View>
             ) : null}
           </View>

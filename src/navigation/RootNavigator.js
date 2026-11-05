@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { getBoolSetting } from '../db/settingsRepo';
+import { Notifications } from '../services/notifications';
 
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import AuthScreen from '../screens/auth/AuthScreen';
@@ -16,6 +17,7 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import AboutScreen from '../screens/profile/AboutScreen';
 
 const Stack = createNativeStackNavigator();
+const navigationRef = createNavigationContainerRef();
 
 const navTheme = {
   dark: false,
@@ -45,6 +47,22 @@ export default function RootNavigator() {
       .catch(() => setSeenWelcome(false));
   }, []);
 
+  // Tapping an expiry notification opens the Reminders tab.
+  useEffect(() => {
+    if (!Notifications) return undefined; // notifications not available in this Expo Go
+    let sub;
+    try {
+      sub = Notifications.addNotificationResponseReceivedListener(() => {
+        if (navigationRef.isReady() && navigationRef.getRootState()?.routes?.some((r) => r.name === 'Main')) {
+          navigationRef.navigate('Main', { screen: 'Reminders' });
+        }
+      });
+    } catch (e) {
+      return undefined;
+    }
+    return () => sub && sub.remove();
+  }, []);
+
   if (!ready || seenWelcome === null) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
@@ -54,7 +72,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         {!session ? (
           // Not signed in

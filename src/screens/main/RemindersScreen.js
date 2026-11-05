@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../../components/Screen';
 import Button from '../../components/Button';
@@ -9,18 +9,21 @@ import { colors, radius } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { listReminders } from '../../db/remindersRepo';
 import { removeReminder } from '../../services/reminders';
+import { getPermissionStatus } from '../../services/notifications';
 import { daysUntil, formatCountdown, formatDate, formatDateWithMonthName, startOfDay } from '../../utils/dates';
 
 export default function RemindersScreen({ navigation }) {
   const { session } = useAuth();
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
+  const [permission, setPermission] = useState('granted');
 
   const { reload } = useLoad(async () => {
     const all = await listReminders(session.uid);
     const today = startOfDay(Date.now());
     setUpcoming(all.filter((r) => r.dueAt >= today));
     setPast(all.filter((r) => r.dueAt < today).reverse());
+    setPermission(await getPermissionStatus());
   }, [session.uid]);
 
   const next = upcoming[0];
@@ -31,7 +34,7 @@ export default function RemindersScreen({ navigation }) {
   };
 
   const confirmDelete = (r) => {
-    Alert.alert('Delete reminder?', `“${r.title}” will be removed.`, [
+    Alert.alert('Delete reminder?', `“${r.title}” and its notifications will be removed.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -53,6 +56,13 @@ export default function RemindersScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Reminders</Text>
         <Text style={styles.subtitle}>Important dates, kept in one place.</Text>
+        
+        {permission === 'denied' ? (
+          <Pressable style={styles.banner} onPress={() => Linking.openSettings()} accessibilityRole="button">
+            <Ionicons name="notifications-off-outline" size={20} color={colors.accent} />
+            <Text style={styles.bannerText}>Notifications are turned off, so you will not get expiry alerts. Tap to open Settings.</Text>
+          </Pressable>
+        ) : null}
 
         {next ? (
           <View style={styles.next}>
