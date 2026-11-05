@@ -132,6 +132,7 @@ export function AuthProvider({ children }) {
     [uid, firebaseUser]
   );
 
+  const resetPassword = useCallback((email) => authService.sendResetEmail(email), []);
 
   const value = useMemo(
     () => ({
@@ -142,9 +143,10 @@ export function AuthProvider({ children }) {
       signOut,
       continueOffline,
       saveProfile,
+      resetPassword,
       refreshProfile,
     }),
-    [ready, session, signUp, signIn, signOut, continueOffline, saveProfile, refreshProfile]
+    [ready, session, signUp, signIn, signOut, continueOffline, saveProfile, resetPassword, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

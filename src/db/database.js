@@ -8,7 +8,7 @@ import * as SQLite from 'expo-sqlite';
  * pushing one more function onto MIGRATIONS.
  */
 
-const DB_NAME = 'documate.db';
+const DB_NAME = 'documate_v2.db';
 
 const MIGRATIONS = [
   // v1 ---------------------------------------------------------------

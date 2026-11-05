@@ -71,7 +71,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'image/*'],
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: false,
         multiple: false,
       });
       if (result.canceled || !result.assets?.length) return;
@@ -116,7 +116,7 @@ export default function AddEditDocumentScreen({ navigation, route }) {
       else await addDocument(session.uid, { ...form, file: pickedFile });
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Could not save', 'Something went wrong while saving this document. Please try again.');
+      Alert.alert('Could not save', String(e?.message || e));
     } finally {
       setSaving(false);
     }

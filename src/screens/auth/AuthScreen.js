@@ -20,7 +20,7 @@ import { countOfflineDocuments, adoptOfflineData } from '../../services/offlineD
 import { validateEmail, validateName, validatePassword } from '../../utils/validation';
 
 export default function AuthScreen() {
-  const { signIn, signUp, continueOffline } = useAuth();
+  const { signIn, signUp, continueOffline, resetPassword } = useAuth();
 
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
   const [name, setName] = useState('');
@@ -74,6 +74,24 @@ export default function AuthScreen() {
       offerOfflineTransfer(user.uid);
     } catch (e) {
       Alert.alert(mode === 'signup' ? 'Could not create account' : 'Could not log in', friendlyAuthError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const forgotPassword = async () => {
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setErrors({ email: 'Enter your email first' });
+      emailRef.current?.focus();
+      return;
+    }
+    setBusy(true);
+    try {
+      await resetPassword(email);
+      Alert.alert('Check your email', `We sent a password reset link to ${email.trim()}.`);
+    } catch (e) {
+      Alert.alert('Could not send reset email', friendlyAuthError(e));
     } finally {
       setBusy(false);
     }
@@ -160,7 +178,11 @@ export default function AuthScreen() {
               onSubmitEditing={submit}
               error={errors.confirm}
             />
-          ) : null}
+          ) : (
+            <Pressable onPress={forgotPassword} style={styles.forgot} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          )}
 
           <Button
             title={isLogin ? 'Login' : 'Create account'}

@@ -25,7 +25,7 @@ export default function EditProfileScreen({ navigation }) {
       await saveProfile({ name: name.trim(), degree: degree.trim(), studentId: studentId.trim() });
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Could not save', 'Please try again.');
+      Alert.alert('Could not save', String(e?.message || e));
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
@@ -53,6 +54,10 @@ export async function signOut() {
   if (auth) await firebaseSignOut(auth);
 }
 
+export async function sendResetEmail(email) {
+  const a = requireAuth();
+  await sendPasswordResetEmail(a, email.trim());
+}
 
 export async function updateDisplayName(name) {
   if (auth?.currentUser) {
